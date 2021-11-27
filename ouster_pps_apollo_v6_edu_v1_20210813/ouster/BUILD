@@ -1,10 +1,7 @@
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
-load("//tools/install:install.bzl", "install")
 load("//tools:cpplint.bzl", "cpplint")
-
+load("//tools/install:install.bzl", "install")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 package(default_visibility = ["//visibility:public"])
-
-OUSTER_COPTS = ['-DMODULE_NAME=\\"ouster\\"']
 
 install(
     name = "install",
@@ -12,7 +9,7 @@ install(
         ":runtime_data",
     ],
     targets = [
-        "libouster_driver_component.so",
+        "//modules/drivers/lidar/ouster:libouster_driver_component.so",
     ],
 )
 
@@ -28,20 +25,51 @@ filegroup(
 
 cc_binary(
     name = "libouster_driver_component.so",
-    linkshared = True,
+    linkopts = ["-shared"],
     linkstatic = False,
-    linkopts = [
-    	"-shared",
-        "-L/apollo/modules/drivers/lidar/ouster/lib",
-        "-Wl,-rpath=/apollo/modules/drivers/lidar/ouster/lib",      
-        "-louster_driver",
+    deps = [":ouster_driver"],
+)
+
+
+cc_library(
+    name = "ouster_driver",
+    srcs = [
+        "jsoncpp.cc",
+        "compat.cc",
+        "os1.cc",
+        "component.cc",
+        "driver.cc",
+        "parser.cc",
+        "ouster128_parser.cc",
+        "const_var.cc",
+        "lidar_scan.cc",
+        "os1_impl.cc",
+        "os1_packet_impl.cc",
+        "os1_packet.cc",
     ],
-    copts = OUSTER_COPTS,
+    hdrs = [
+        "ouster128_parser.h",
+        "json.h",
+        "json-forwards.h",
+        "version.h",
+        "os1_packet_impl.h",
+        "os1_packet.h",
+        "compat.h",
+        "lidar_scan.h",
+        "os1.h",
+        "os1_impl.h",
+        "const_var.h",
+        "driver.h",
+        "ouster_driver_component.h",
+        "ouster_convert_component.h",
+        "parser.h",
+        "type_defs.h",
+    ],
+    copts = ['-DMODULE_NAME=\\"ouster\\"'],
     deps = [
         "//cyber",
         "//modules/common/util",
-        "//modules/drivers/lidar/proto:ouster_cc_proto",
-        "//modules/drivers/lidar/proto:ouster_config_cc_proto",
+        "//modules/drivers/lidar/ouster/proto:ouster_proto",
         "//modules/drivers/proto:pointcloud_cc_proto",
     ],
 )
